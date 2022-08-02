@@ -1,2 +1,4 @@
-# ecsjnwchem
-Simple GUI of NWChem, which is designed to use for "Keisan Kagaku seminar" of The Electrochemical Society of Japan / Kanto Branch.
+# ECSJNWChem
+
+電気化学会関東支部の計算化学セミナーで使用する簡易GUIです。
+NWChemを使った量子化学計算ができます。

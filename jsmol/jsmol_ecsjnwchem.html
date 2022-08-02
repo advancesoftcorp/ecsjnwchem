@@ -1,0 +1,30 @@
+<html>
+
+<head>
+    <script type="text/javascript" language="javascript" src="JSmol.min.js"></script>
+    <script type="text/javascript">
+        var Info = {
+            color: "#E8F4FF",
+            height: "100%",
+            width: "100%",
+            jarFile: "java/JmolApplet.jar",
+            isSigned: false,
+            jarPath: "java",
+            j2sPath: "j2s",
+            serverURL: "http://localhost:8000/php/jsmol.php",
+            use: "HTML5"
+        };
+
+        function executeJsmol(data) {
+            Jmol.script(jmolApplet, data)
+        }
+    </script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        jmolApplet = Jmol.getApplet("jmolApplet", Info);
+    </script>
+</body>
+
+</html>
