@@ -101,6 +101,9 @@ public final class ECSJNWChemController implements Initializable {
     private Button runButton;
 
     @FXML
+    private Button stopButton;
+
+    @FXML
     private Button reloadOutButton;
 
     @FXML
@@ -115,6 +118,8 @@ public final class ECSJNWChemController implements Initializable {
 
     private JsmolView jsmolView;
 
+    private NWChemRunner nwchemRunner;
+
     private boolean runningNWChem;
 
     private boolean loggingNWChem;
@@ -126,6 +131,8 @@ public final class ECSJNWChemController implements Initializable {
         this.inpFile = null;
 
         this.jsmolView = null;
+
+        this.nwchemRunner = null;
 
         this.runningNWChem = false;
 
@@ -146,6 +153,7 @@ public final class ECSJNWChemController implements Initializable {
         this.setupOutArea();
         this.setupSaveButton();
         this.setupRunButton();
+        this.setupStopButton();
         this.setupReloadOutButton();
         this.setupReloadAtomButton();
         this.setupJsmolPane();
@@ -631,10 +639,15 @@ public final class ECSJNWChemController implements Initializable {
             }
 
             Thread thread = new Thread(() -> {
-                NWChemRunner nwChemRunner = new NWChemRunner(this.inpFile, OUT_FILE);
-                nwChemRunner.runNWChem();
+                NWChemRunner nwchemRunner = new NWChemRunner(this.inpFile, OUT_FILE);
+                synchronized (this) {
+                    this.nwchemRunner = nwchemRunner;
+                }
+
+                nwchemRunner.runNWChem();
 
                 synchronized (this) {
+                    this.nwchemRunner = null;
                     this.runningNWChem = false;
                 }
             });
@@ -657,6 +670,48 @@ public final class ECSJNWChemController implements Initializable {
 
                 this.updateOutArea();
             });
+        });
+    }
+
+    private void setupStopButton() {
+        if (this.stopButton == null) {
+            return;
+        }
+
+        this.stopButton.setText("");
+        this.stopButton.setTooltip(new Tooltip("stop NWChem"));
+        this.stopButton.setGraphic(SVGData.getStopGraphic(GRAPHIC_SIZE, GRAPHIC_STYLE, null));
+
+        this.stopButton.setOnAction(event -> {
+            NWChemRunner nwchemRunner = null;
+            synchronized (this) {
+                nwchemRunner = this.nwchemRunner;
+            }
+
+            if (nwchemRunner == null) {
+                return;
+            }
+
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            if (this.stage != null) {
+                alert.initOwner(this.stage);
+            }
+
+            alert.getButtonTypes().clear();
+            alert.getButtonTypes().add(ButtonType.YES);
+            alert.getButtonTypes().add(ButtonType.NO);
+            alert.setHeaderText("実行中のNWChemの計算を停止させますか ?");
+
+            Optional<ButtonType> optButtonType = alert.showAndWait();
+            if (optButtonType == null || !optButtonType.isPresent()) {
+                return;
+            }
+
+            if (optButtonType.get() != ButtonType.YES) {
+                return;
+            }
+
+            nwchemRunner.stop();
         });
     }
 

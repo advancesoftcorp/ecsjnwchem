@@ -54,6 +54,11 @@
                                     <Insets bottom="30.0" right="30.0" />
                                  </StackPane.margin>
                               </Button>
+                              <Button fx:id="stopButton" mnemonicParsing="false" prefHeight="82.0" prefWidth="82.0" styleClass="icon-interface" text="\@" StackPane.alignment="BOTTOM_RIGHT">
+                                 <StackPane.margin>
+                                    <Insets bottom="125.0" right="30.0" />
+                                 </StackPane.margin>
+                              </Button>
                            </children>
                         </StackPane>
                      </content>

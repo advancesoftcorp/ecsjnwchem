@@ -22,6 +22,10 @@ public final class NWChemRunner {
 
     private String outName;
 
+    private int numParallel;
+
+    private Process process;
+
     public NWChemRunner(File inpFile, String outName) {
         if (inpFile == null) {
             throw new IllegalArgumentException("inpFile is null.");
@@ -34,23 +38,43 @@ public final class NWChemRunner {
         this.inpFile = inpFile;
 
         this.outName = outName;
+
+        this.numParallel = 1;
+
+        this.process = null;
+    }
+
+    public void setNumParallel(int numParallel) {
+        this.numParallel = numParallel;
     }
 
     public void runNWChem() {
-        File execFile = null;
+        synchronized (this) {
+            if (this.process != null) {
+                return;
+            }
+        }
+
+        File execDir = null;
         String execPath = null;
+        String mpiPath = null;
 
         if (this.isWindows()) {
-            execFile = new File("nwchem");
-            execFile = new File(execFile, "bin");
-            execFile = new File(execFile, "nwchem.exe");
-            execPath = execFile.getPath();
+            execDir = new File("nwchem");
+            execDir = new File(execDir, "bin");
+            execPath = new File(execDir, "nwchem.exe").getPath();
+            mpiPath = new File(execDir, "mpiexec.exe").getPath();
 
         } else {
             execPath = "nwchem";
+            mpiPath = "mpirun";
         }
 
         if (execPath == null || execPath.isEmpty()) {
+            return;
+        }
+
+        if (mpiPath == null || mpiPath.isEmpty()) {
             return;
         }
 
@@ -58,7 +82,13 @@ public final class NWChemRunner {
         String inpName = this.inpFile.getName();
 
         try {
-            ProcessBuilder builder = new ProcessBuilder(execPath, inpName);
+            ProcessBuilder builder = null;
+            if (this.numParallel > 1) {
+                builder = new ProcessBuilder(mpiPath, "-n", Integer.toString(this.numParallel), execPath, inpName);
+            } else {
+                builder = new ProcessBuilder(execPath, inpName);
+            }
+
             builder.directory(workDir);
             builder.redirectErrorStream(true);
             builder.redirectOutput(new File(workDir, this.outName));
@@ -66,16 +96,16 @@ public final class NWChemRunner {
             Map<String, String> envMap = builder.environment();
             if (envMap != null) {
                 if (this.isWindows()) {
-                    String path = envMap.get("PATH");
-                    path = path == null ? null : path.trim();
+                    String orgPath = envMap.get("PATH");
+                    orgPath = orgPath == null ? null : orgPath.trim();
 
-                    if (path == null || path.isEmpty()) {
-                        path = execFile.getAbsolutePath();
+                    if (orgPath == null || orgPath.isEmpty()) {
+                        orgPath = execDir.getAbsolutePath();
                     } else {
-                        path = execFile.getAbsolutePath() + File.pathSeparator + path;
+                        orgPath = execDir.getAbsolutePath() + File.pathSeparator + orgPath;
                     }
 
-                    envMap.put("PATH", path);
+                    envMap.put("PATH", orgPath);
                 }
 
                 String basisLib = envMap.get("NWCHEM_BASIS_LIBRARY");
@@ -94,14 +124,45 @@ public final class NWChemRunner {
             }
 
             Process process = builder.start();
+
+            synchronized (this) {
+                this.process = process;
+            }
+
             process.waitFor();
 
         } catch (Exception e) {
             e.printStackTrace();
+
+        } finally {
+            synchronized (this) {
+                this.process = null;
+            }
         }
     }
 
-    public boolean isWindows() {
+    public void stop() {
+        Process process = null;
+        synchronized (this) {
+            process = this.process;
+        }
+
+        if (process == null) {
+            return;
+        }
+
+        try {
+            process.getInputStream().close();
+            process.getOutputStream().close();
+            process.getErrorStream().close();
+        } catch (Exception e) {
+        }
+
+        process.destroy();
+        process.destroyForcibly();
+    }
+
+    private boolean isWindows() {
         String osName = System.getProperty("os.name", null);
         if (osName == null || osName.isEmpty()) {
             return false;

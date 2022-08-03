@@ -69,6 +69,14 @@ public final class SVGData {
             + "h14.916c0.69,0,1.25,0.56,1.25,1.25s-0.56,1.25-1.25,1.25H9.917C9.228,8.667,8.667,8.107,8.667,7.417z M24.833,13.75H9.917"
             + "c-0.69,0-1.25-0.56-1.25-1.25s0.56-1.25,1.25-1.25h14.916c0.69,0,1.25,0.56,1.25,1.25S25.523,13.75,24.833,13.75z";
 
+    public static final double STOP_WIDTH = 40.0;
+
+    public static final double STOP_HEIGHT = 40.0;
+
+    public static final String STOP_CONTENT = "M20,0C8.954,0,0,8.954,0,20c0,11.046,8.954,20,20,20c11.046,0,20-8.954,20-20C40,8.954,31.046,0,20,0z M4,20"
+            + "c0-8.822,7.178-16,16-16c3.691,0,7.085,1.269,9.795,3.377L7.377,29.795C5.269,27.085,4,23.691,4,20z M20,36"
+            + "c-3.691,0-7.085-1.269-9.795-3.377l22.419-22.419C34.731,12.915,36,16.309,36,20C36,28.823,28.823,36,20,36z";
+
     private SVGData() {
         // NOP
     }
@@ -83,6 +91,10 @@ public final class SVGData {
 
     public static Node getSaveGraphic(double size, String style, String styleClass) {
         return getGraphic(SAVE_WIDTH, SAVE_HEIGHT, SAVE_CONTENT, size, style, styleClass);
+    }
+
+    public static Node getStopGraphic(double size, String style, String styleClass) {
+        return getGraphic(STOP_WIDTH, STOP_HEIGHT, STOP_CONTENT, size, style, styleClass);
     }
 
     private static Node getGraphic(
