@@ -31,6 +31,13 @@
     -fx-font-size: 14.0px;
 }
 
+.text-field {
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: red;
+    -fx-font-family: monospace;
+    -fx-font-size: 14.0px;
+}
+
 .text-area {
     -fx-text-fill: black;
     -fx-prompt-text-fill: red;

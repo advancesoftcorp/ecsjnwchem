@@ -108,6 +108,15 @@ public final class ECSJNWChemController implements Initializable {
     private Button reloadOutButton;
 
     @FXML
+    private TextField grepField;
+
+    @FXML
+    private TextArea grepArea;
+
+    @FXML
+    private Button grepButton;
+
+    @FXML
     private Button reloadAtomButton;
 
     @FXML
@@ -123,7 +132,9 @@ public final class ECSJNWChemController implements Initializable {
 
     private boolean runningNWChem;
 
-    private boolean loggingNWChem;
+    private boolean[] loggingNWChem;
+
+    private boolean[] grepingNWChem;
 
     public ECSJNWChemController() {
 
@@ -137,7 +148,9 @@ public final class ECSJNWChemController implements Initializable {
 
         this.runningNWChem = false;
 
-        this.loggingNWChem = false;
+        this.loggingNWChem = new boolean[] { false };
+
+        this.grepingNWChem = new boolean[] { false };
     }
 
     public void setStage(Stage stage) {
@@ -156,6 +169,8 @@ public final class ECSJNWChemController implements Initializable {
         this.setupRunButton();
         this.setupStopButton();
         this.setupReloadOutButton();
+        this.setupGrepField();
+        this.setupGrepButton();
         this.setupReloadAtomButton();
         this.setupJsmolPane();
     }
@@ -461,116 +476,7 @@ public final class ECSJNWChemController implements Initializable {
             return;
         }
 
-        synchronized (this) {
-            if (this.loggingNWChem) {
-                return;
-            }
-
-            this.loggingNWChem = true;
-        }
-
-        this.outArea.setText("");
-
-        try {
-            if (this.inpFile == null || !this.inpFile.isFile()) {
-                synchronized (this) {
-                    this.loggingNWChem = false;
-                }
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            synchronized (this) {
-                this.loggingNWChem = false;
-            }
-            return;
-        }
-
-        File directory = this.inpFile.getParentFile();
-        File outFile = new File(directory, OUT_FILE);
-
-        try {
-            if (!outFile.isFile()) {
-                synchronized (this) {
-                    this.loggingNWChem = false;
-                }
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            synchronized (this) {
-                this.loggingNWChem = false;
-            }
-            return;
-        }
-
-        Thread thread = new Thread(() -> {
-            BufferedReader reader = null;
-            try {
-                reader = new BufferedReader(new FileReader(outFile));
-
-                String line = null;
-                Queue<String> lines = new LinkedList<>();
-
-                while ((line = reader.readLine()) != null) {
-                    lines.offer(line);
-
-                    if (lines.size() >= OUT_BUFFER) {
-                        StringBuilder strBuilder = new StringBuilder();
-                        while (!lines.isEmpty()) {
-                            strBuilder.append(lines.poll());
-                            strBuilder.append(System.lineSeparator());
-                        }
-
-                        Platform.runLater(() -> {
-                            this.outArea.appendText(strBuilder.toString());
-                        });
-
-                        try {
-                            Thread.sleep(SLEEP_OUT_BUFFER);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-                if (!lines.isEmpty()) {
-                    StringBuilder strBuilder = new StringBuilder();
-                    while (!lines.isEmpty()) {
-                        strBuilder.append(lines.poll());
-                        strBuilder.append(System.lineSeparator());
-                    }
-
-                    Platform.runLater(() -> {
-                        this.outArea.appendText(strBuilder.toString());
-                    });
-
-                    try {
-                        Thread.sleep(SLEEP_OUT_BUFFER);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-
-            } finally {
-                try {
-                    if (reader != null) {
-                        reader.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            synchronized (this) {
-                this.loggingNWChem = false;
-            }
-        });
-
-        thread.start();
+        this.updateTextArea(this.outArea, null, this.loggingNWChem);
     }
 
     private void setupSaveButton() {
@@ -750,6 +656,160 @@ public final class ECSJNWChemController implements Initializable {
         this.reloadOutButton.setOnAction(event -> {
             this.updateOutArea();
         });
+    }
+
+    private void setupGrepField() {
+        if (this.grepField == null) {
+            return;
+        }
+
+        this.grepField.setOnAction(event -> this.pressButton(this.grepButton));
+    }
+
+    private void setupGrepButton() {
+        if (this.grepButton == null) {
+            return;
+        }
+
+        this.grepButton.setOnAction(event -> this.updateGrepArea());
+    }
+
+    private void updateGrepArea() {
+        if (this.grepArea == null) {
+            return;
+        }
+
+        String text = null;
+        if (this.grepField != null) {
+            text = this.grepField.getText();
+        }
+
+        if (text != null) {
+            text = text.trim();
+        }
+
+        if (text != null && !text.isEmpty()) {
+            this.updateTextArea(this.grepArea, text, this.grepingNWChem);
+        }
+    }
+
+    private void updateTextArea(TextArea textArea, String grepText, boolean[] doingFlag) {
+        if (textArea == null) {
+            return;
+        }
+
+        synchronized (this) {
+            if (doingFlag[0]) {
+                return;
+            }
+
+            doingFlag[0] = true;
+        }
+
+        textArea.setText("");
+
+        try {
+            if (this.inpFile == null || !this.inpFile.isFile()) {
+                synchronized (this) {
+                    doingFlag[0] = false;
+                }
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            synchronized (this) {
+                doingFlag[0] = false;
+            }
+            return;
+        }
+
+        File directory = this.inpFile.getParentFile();
+        File outFile = new File(directory, OUT_FILE);
+
+        try {
+            if (!outFile.isFile()) {
+                synchronized (this) {
+                    doingFlag[0] = false;
+                }
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            synchronized (this) {
+                doingFlag[0] = false;
+            }
+            return;
+        }
+
+        Thread thread = new Thread(() -> {
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new FileReader(outFile));
+
+                String line = null;
+                Queue<String> lines = new LinkedList<>();
+
+                while ((line = reader.readLine()) != null) {
+                    if (grepText == null || grepText.isEmpty() || line.contains(grepText)) {
+                        lines.offer(line);
+                    }
+
+                    if (lines.size() >= OUT_BUFFER) {
+                        StringBuilder strBuilder = new StringBuilder();
+                        while (!lines.isEmpty()) {
+                            strBuilder.append(lines.poll());
+                            strBuilder.append(System.lineSeparator());
+                        }
+
+                        Platform.runLater(() -> {
+                            textArea.appendText(strBuilder.toString());
+                        });
+
+                        try {
+                            Thread.sleep(SLEEP_OUT_BUFFER);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                if (!lines.isEmpty()) {
+                    StringBuilder strBuilder = new StringBuilder();
+                    while (!lines.isEmpty()) {
+                        strBuilder.append(lines.poll());
+                        strBuilder.append(System.lineSeparator());
+                    }
+
+                    Platform.runLater(() -> {
+                        textArea.appendText(strBuilder.toString());
+                    });
+
+                    try {
+                        Thread.sleep(SLEEP_OUT_BUFFER);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            } finally {
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized (this) {
+                doingFlag[0] = false;
+            }
+        });
+
+        thread.start();
     }
 
     private void setupReloadAtomButton() {

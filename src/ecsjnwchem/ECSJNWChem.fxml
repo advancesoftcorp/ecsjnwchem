@@ -9,6 +9,7 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
@@ -45,7 +46,7 @@
                      <content>
                         <StackPane>
                            <children>
-                              <TextArea fx:id="outArea" editable="false" style="-fx-font-size: 14.0px;">
+                              <TextArea fx:id="outArea" editable="false" focusTraversable="false" style="-fx-font-size: 14.0px;">
                                  <StackPane.margin>
                                     <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                                  </StackPane.margin></TextArea>
@@ -61,6 +62,40 @@
                               </Button>
                            </children>
                         </StackPane>
+                     </content>
+                  </Tab>
+                  <Tab closable="false" text="文字列検索">
+                     <content>
+                        <BorderPane>
+                           <center>
+                              <TextArea fx:id="grepArea" editable="false" focusTraversable="false" style="-fx-font-size: 14.0px;">
+                                 <BorderPane.margin>
+                                    <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                                 </BorderPane.margin>
+                              </TextArea>
+                           </center>
+                           <top>
+                              <BorderPane>
+                                 <center>
+                                    <TextField fx:id="grepField" prefHeight="30.0" style="-fx-background-radius: 8.0px;">
+                                       <BorderPane.margin>
+                                          <Insets right="10.0" />
+                                       </BorderPane.margin>
+                                    </TextField>
+                                 </center>
+                                 <right>
+                                  <Button fx:id="grepButton" mnemonicParsing="false" prefHeight="30.0" style="-fx-background-radius: 10.0px;" text="検索" BorderPane.alignment="CENTER">
+                                       <BorderPane.margin>
+                                          <Insets right="5.0" />
+                                       </BorderPane.margin>
+                                    </Button>
+                                 </right>
+                                 <BorderPane.margin>
+                                    <Insets bottom="4.0" left="4.0" right="4.0" top="8.0" />
+                                 </BorderPane.margin>
+                              </BorderPane>
+                           </top>
+                        </BorderPane>
                      </content>
                   </Tab>
                </tabs>
