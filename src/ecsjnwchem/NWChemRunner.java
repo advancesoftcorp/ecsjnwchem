@@ -62,10 +62,11 @@ public final class NWChemRunner {
         if (this.isWindows()) {
             execDir = new File("nwchem");
             execDir = new File(execDir, "bin");
-            execPath = new File(execDir, "nwchem.exe").getPath();
-            mpiPath = new File(execDir, "mpiexec.exe").getPath();
+            execPath = new File(execDir, "nwchem.exe").getAbsolutePath();
+            mpiPath = new File(execDir, "mpiexec.exe").getAbsolutePath();
 
         } else {
+            execDir = null;
             execPath = "nwchem";
             mpiPath = "mpirun";
         }
@@ -83,8 +84,9 @@ public final class NWChemRunner {
 
         try {
             ProcessBuilder builder = null;
-            if (this.numParallel > 1 && !this.isWindows()) {
-                builder = new ProcessBuilder(mpiPath, "-n", Integer.toString(this.numParallel), execPath, inpName);
+            if (this.numParallel > 1) {
+                builder = new ProcessBuilder(
+                        mpiPath, "-localonly", "-n", Integer.toString(this.numParallel), execPath, inpName);
             } else {
                 builder = new ProcessBuilder(execPath, inpName);
             }
@@ -96,23 +98,20 @@ public final class NWChemRunner {
             Map<String, String> envMap = builder.environment();
             if (envMap != null) {
                 if (this.isWindows()) {
-                    String orgPath = envMap.get("PATH");
-                    orgPath = orgPath == null ? null : orgPath.trim();
+                    String path = envMap.get("PATH");
+                    path = path == null ? null : path.trim();
 
-                    if (orgPath == null || orgPath.isEmpty()) {
-                        orgPath = execDir.getAbsolutePath();
+                    if (path == null || path.isEmpty()) {
+                        path = execDir.getAbsolutePath();
                     } else {
-                        orgPath = execDir.getAbsolutePath() + File.pathSeparator + orgPath;
+                        path = execDir.getAbsolutePath() + File.pathSeparator + path;
                     }
 
-                    envMap.put("PATH", orgPath);
+                    envMap.put("PATH", path);
+                    envMap.put("Path", path);
                 }
 
-                if (this.isWindows()) {
-                    envMap.put("OMP_NUM_THREADS", Integer.toString(Math.max(1, this.numParallel)));
-                } else {
-                    envMap.put("OMP_NUM_THREADS", "1");
-                }
+                envMap.put("OMP_NUM_THREADS", "1");
 
                 String basisLib = envMap.get("NWCHEM_BASIS_LIBRARY");
                 basisLib = basisLib == null ? null : basisLib.trim();
