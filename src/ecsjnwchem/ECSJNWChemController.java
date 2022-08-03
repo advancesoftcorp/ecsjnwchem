@@ -744,6 +744,13 @@ public final class ECSJNWChemController implements Initializable {
             return;
         }
 
+        String grepTextLower;
+        if (grepText != null) {
+            grepTextLower = grepText.trim().toLowerCase();
+        } else {
+            grepTextLower = null;
+        }
+
         Thread thread = new Thread(() -> {
             BufferedReader reader = null;
             try {
@@ -753,7 +760,8 @@ public final class ECSJNWChemController implements Initializable {
                 Queue<String> lines = new LinkedList<>();
 
                 while ((line = reader.readLine()) != null) {
-                    if (grepText == null || grepText.isEmpty() || line.contains(grepText)) {
+                    if (grepTextLower == null || grepTextLower.isEmpty()
+                            || line.toLowerCase().contains(grepTextLower)) {
                         lines.offer(line);
                     }
 
