@@ -1084,6 +1084,12 @@ public final class ECSJNWChemController implements Initializable {
         dialog.show();
 
         Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(SLEEP_SHOW_GEOM);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             Platform.runLater(() -> jsmolView.executeScript("load \"" + xyzFile.getAbsolutePath() + "\""));
         });
 
