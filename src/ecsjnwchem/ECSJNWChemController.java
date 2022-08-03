@@ -690,6 +690,9 @@ public final class ECSJNWChemController implements Initializable {
 
         if (text != null && !text.isEmpty()) {
             this.updateTextArea(this.grepArea, text, this.grepingNWChem);
+
+        } else {
+            this.grepArea.setText("");
         }
     }
 
