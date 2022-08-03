@@ -98,6 +98,28 @@
                         </BorderPane>
                      </content>
                   </Tab>
+                  <Tab closable="false" text="原子座標">
+                     <content>
+                        <StackPane>
+                           <children>
+                              <TextArea fx:id="geomArea" editable="false" focusTraversable="false" style="-fx-font-size: 14.0px;">
+                                 <StackPane.margin>
+                                    <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                                 </StackPane.margin></TextArea>
+                              <Button fx:id="reloadGeomButton" mnemonicParsing="false" prefHeight="82.0" prefWidth="82.0" styleClass="icon-interface" text="\@" StackPane.alignment="BOTTOM_RIGHT">
+                                 <StackPane.margin>
+                                    <Insets bottom="30.0" right="30.0" />
+                                 </StackPane.margin>
+                              </Button>
+                              <Button fx:id="showGeomButton" mnemonicParsing="false" prefHeight="82.0" prefWidth="82.0" styleClass="icon-interface" text="\@" StackPane.alignment="BOTTOM_RIGHT">
+                                 <StackPane.margin>
+                                    <Insets bottom="125.0" right="30.0" />
+                                 </StackPane.margin>
+                              </Button>
+                           </children>
+                        </StackPane>
+                     </content>
+                  </Tab>
                </tabs>
             </TabPane>
             <StackPane>

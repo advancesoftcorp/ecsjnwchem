@@ -40,6 +40,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.SingleSelectionModel;
@@ -55,6 +56,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public final class ECSJNWChemController implements Initializable {
@@ -70,6 +72,12 @@ public final class ECSJNWChemController implements Initializable {
     private static final long SLEEP_OUT_BUFFER = 200L;
 
     private static final long SLEEP_AFTER_RUN = 500L;
+
+    private static final long SLEEP_SHOW_GEOM = 500L;
+
+    private static final double GEOM_VIEW_SIZE = 650.0;
+
+    private static final double BOHR = 0.52917720859;
 
     @FXML
     private Hyperlink asHyperlink;
@@ -117,6 +125,15 @@ public final class ECSJNWChemController implements Initializable {
     private Button grepButton;
 
     @FXML
+    private TextArea geomArea;
+
+    @FXML
+    private Button reloadGeomButton;
+
+    @FXML
+    private Button showGeomButton;
+
+    @FXML
     private Button reloadAtomButton;
 
     @FXML
@@ -136,6 +153,8 @@ public final class ECSJNWChemController implements Initializable {
 
     private boolean[] grepingNWChem;
 
+    private boolean geomingNWChem;
+
     public ECSJNWChemController() {
 
         this.stage = null;
@@ -151,6 +170,8 @@ public final class ECSJNWChemController implements Initializable {
         this.loggingNWChem = new boolean[] { false };
 
         this.grepingNWChem = new boolean[] { false };
+
+        this.geomingNWChem = false;
     }
 
     public void setStage(Stage stage) {
@@ -171,6 +192,9 @@ public final class ECSJNWChemController implements Initializable {
         this.setupReloadOutButton();
         this.setupGrepField();
         this.setupGrepButton();
+        this.setupGeomArea();
+        this.setupReloadGeomButton();
+        this.setupShowGeomButton();
         this.setupReloadAtomButton();
         this.setupJsmolPane();
     }
@@ -696,6 +720,31 @@ public final class ECSJNWChemController implements Initializable {
         }
     }
 
+    private File getOutFile() {
+        try {
+            if (this.inpFile == null || !this.inpFile.isFile()) {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        File directory = this.inpFile.getParentFile();
+        File outFile = new File(directory, OUT_FILE);
+
+        try {
+            if (!outFile.isFile()) {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return outFile;
+    }
+
     private void updateTextArea(TextArea textArea, String grepText, boolean[] doingFlag) {
         if (textArea == null) {
             return;
@@ -711,33 +760,8 @@ public final class ECSJNWChemController implements Initializable {
 
         textArea.setText("");
 
-        try {
-            if (this.inpFile == null || !this.inpFile.isFile()) {
-                synchronized (this) {
-                    doingFlag[0] = false;
-                }
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            synchronized (this) {
-                doingFlag[0] = false;
-            }
-            return;
-        }
-
-        File directory = this.inpFile.getParentFile();
-        File outFile = new File(directory, OUT_FILE);
-
-        try {
-            if (!outFile.isFile()) {
-                synchronized (this) {
-                    doingFlag[0] = false;
-                }
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        File outFile = this.getOutFile();
+        if (outFile == null) {
             synchronized (this) {
                 doingFlag[0] = false;
             }
@@ -823,6 +847,249 @@ public final class ECSJNWChemController implements Initializable {
         thread.start();
     }
 
+    private void setupGeomArea() {
+        if (this.geomArea == null) {
+            return;
+        }
+
+        this.geomArea.setPromptText(
+                System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + "              Please Reload Output File of NWChem.");
+
+        this.geomArea.setOnKeyPressed(event -> {
+            if (event != null && event.getCode() == KeyCode.F5) {
+                this.pressButton(this.reloadGeomButton);
+            }
+        });
+
+        this.updateGeomArea();
+    }
+
+    private void setupReloadGeomButton() {
+        if (this.reloadGeomButton == null) {
+
+        }
+
+        this.reloadGeomButton.setText("");
+        this.reloadGeomButton.setTooltip(new Tooltip("reload optimized geometries"));
+        this.reloadGeomButton.setGraphic(SVGData.getReloadGraphic(GRAPHIC_SIZE, GRAPHIC_STYLE, null));
+        this.reloadGeomButton.setOnAction(event -> this.updateGeomArea());
+    }
+
+    private void setupShowGeomButton() {
+        if (this.showGeomButton == null) {
+
+        }
+
+        this.showGeomButton.setText("");
+        this.showGeomButton.setTooltip(new Tooltip("show optimized geometries"));
+        this.showGeomButton.setGraphic(SVGData.getAtomsGraphic(GRAPHIC_SIZE, GRAPHIC_STYLE, null));
+        this.showGeomButton.setOnAction(event -> this.showGeometries());
+    }
+
+    private void updateGeomArea() {
+        if (this.geomArea == null) {
+            return;
+        }
+
+        synchronized (this) {
+            if (this.geomingNWChem) {
+                return;
+            }
+
+            geomingNWChem = true;
+        }
+
+        this.geomArea.setText("");
+
+        File outFile = this.getOutFile();
+        if (outFile == null) {
+            synchronized (this) {
+                this.geomingNWChem = false;
+            }
+            return;
+        }
+
+        Thread thread = new Thread(() -> {
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new FileReader(outFile));
+
+                String line = null;
+
+                int geomIndex = 0;
+                List<String> names = null;
+                List<double[]> coords = null;
+
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+
+                    if (line.equals("DFT ENERGY GRADIENTS")) {
+                        reader.readLine();
+                        reader.readLine();
+                        reader.readLine();
+
+                        if (names == null) {
+                            names = new ArrayList<>();
+                        } else {
+                            names.clear();
+                        }
+
+                        if (coords == null) {
+                            coords = new ArrayList<>();
+                        } else {
+                            coords.clear();
+                        }
+
+                        while ((line = reader.readLine()) != null) {
+                            line = line.trim();
+                            if (line.isEmpty()) {
+                                break;
+                            }
+
+                            String[] subLine = line.split("\\s+");
+
+                            try {
+                                String name = subLine[1];
+                                if (name == null || name.isEmpty()) {
+                                    break;
+                                }
+
+                                double x = Double.parseDouble(subLine[2]);
+                                double y = Double.parseDouble(subLine[3]);
+                                double z = Double.parseDouble(subLine[4]);
+
+                                names.add(name);
+                                coords.add(new double[] { x, y, z });
+
+                            } catch (Exception e) {
+                                break;
+                            }
+                        }
+
+                        if ((!names.isEmpty()) && (!coords.isEmpty()) && names.size() == coords.size()) {
+                            geomIndex++;
+                            int numAtoms = names.size();
+
+                            String[] geomLines = new String[2 + numAtoms];
+                            geomLines[0] = numAtoms + System.lineSeparator();
+                            geomLines[1] = "#Step=" + geomIndex + System.lineSeparator();
+
+                            for (int i = 0; i < numAtoms; i++) {
+                                String name = names.get(i);
+                                double[] coord = coords.get(i);
+                                double x = coord[0] * BOHR;
+                                double y = coord[1] * BOHR;
+                                double z = coord[2] * BOHR;
+
+                                geomLines[2 + i] = String.format("%-5s %10.6f %10.6f %10.6f%n", name, x, y, z);
+                            }
+
+                            Platform.runLater(() -> {
+                                for (int i = 0; i < geomLines.length; i++) {
+                                    this.geomArea.appendText(geomLines[i]);
+                                }
+                            });
+                        }
+
+                        names.clear();
+                        coords.clear();
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            } finally {
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            synchronized (this) {
+                this.geomingNWChem = false;
+            }
+        });
+
+        thread.start();
+    }
+
+    private void showGeometries() {
+        if (this.geomArea == null) {
+            return;
+        }
+
+        // write geometry
+        String text = this.geomArea.getText();
+        text = text == null ? null : text.trim();
+        if (text == null || text.isEmpty()) {
+            return;
+        }
+
+        File xyzFile = this.getXyzFile();
+        if (xyzFile == null) {
+            return;
+        }
+
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(xyzFile)));
+            writer.print(text);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
+
+        // show dialog
+        JsmolView jsmolView = JsmolViewFactory.getInstance().getJsmolView();
+        if (jsmolView == null) {
+            return;
+        }
+
+        Dialog<?> dialog = new Dialog<>();
+        if (this.stage != null) {
+            dialog.initOwner(this.stage);
+        }
+
+        dialog.setResizable(true);
+        dialog.setTitle("原子座標 (アニメーション)");
+        dialog.initModality(Modality.NONE);
+        dialog.getDialogPane().getButtonTypes().clear();
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        BorderPane jsmolPane = new BorderPane(jsmolView);
+        jsmolPane.setPrefSize(GEOM_VIEW_SIZE, GEOM_VIEW_SIZE);
+        dialog.getDialogPane().setContent(jsmolPane);
+        dialog.show();
+
+        Thread thread = new Thread(() -> {
+            Platform.runLater(() -> jsmolView.executeScript("load \"" + xyzFile.getAbsolutePath() + "\""));
+        });
+
+        thread.start();
+    }
+
     private void setupReloadAtomButton() {
         if (this.reloadAtomButton == null) {
             return;
@@ -831,10 +1098,7 @@ public final class ECSJNWChemController implements Initializable {
         this.reloadAtomButton.setText("");
         this.reloadAtomButton.setTooltip(new Tooltip("reload atomic model"));
         this.reloadAtomButton.setGraphic(SVGData.getReloadGraphic(GRAPHIC_SIZE, GRAPHIC_STYLE, null));
-
-        this.reloadAtomButton.setOnAction(event -> {
-            this.updateJsmolPane();
-        });
+        this.reloadAtomButton.setOnAction(event -> this.updateJsmolPane());
     }
 
     private void setupJsmolPane() {
@@ -860,12 +1124,8 @@ public final class ECSJNWChemController implements Initializable {
             return;
         }
 
-        try {
-            if (this.inpFile == null || !this.inpFile.isFile()) {
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        File xyzFile = this.getXyzFile();
+        if (xyzFile == null) {
             return;
         }
 
@@ -908,9 +1168,6 @@ public final class ECSJNWChemController implements Initializable {
         }
 
         // write geometry
-        File directory = this.inpFile.getParentFile();
-        File xyzFile = new File(directory, XYZ_FILE);
-
         PrintWriter writer = null;
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(xyzFile)));
@@ -934,6 +1191,22 @@ public final class ECSJNWChemController implements Initializable {
         if (this.jsmolView != null) {
             this.jsmolView.executeScript("load \"" + xyzFile.getAbsolutePath() + "\"");
         }
+    }
+
+    private File getXyzFile() {
+        try {
+            if (this.inpFile == null || !this.inpFile.isFile()) {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        File directory = this.inpFile.getParentFile();
+        File xyzFile = new File(directory, XYZ_FILE);
+
+        return xyzFile;
     }
 
     private void pressButton(Button button) {
