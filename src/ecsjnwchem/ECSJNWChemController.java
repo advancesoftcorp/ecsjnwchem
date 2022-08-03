@@ -46,6 +46,7 @@ import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -613,6 +614,12 @@ public final class ECSJNWChemController implements Initializable {
                 this.runningNWChem = true;
             }
 
+            Label mpiLabel = new Label("並列数 :  ");
+            TextField mpiField = new TextField();
+            BorderPane mpiPane = new BorderPane();
+            mpiPane.setLeft(new StackPane(mpiLabel));
+            mpiPane.setCenter(mpiField);
+
             Alert alert = new Alert(AlertType.CONFIRMATION);
             if (this.stage != null) {
                 alert.initOwner(this.stage);
@@ -622,6 +629,7 @@ public final class ECSJNWChemController implements Initializable {
             alert.getButtonTypes().add(ButtonType.YES);
             alert.getButtonTypes().add(ButtonType.NO);
             alert.setHeaderText("NWChemの計算を実行しますか ?");
+            alert.getDialogPane().setContent(mpiPane);
 
             Optional<ButtonType> optButtonType = alert.showAndWait();
             if (optButtonType == null || !optButtonType.isPresent()) {
@@ -638,12 +646,27 @@ public final class ECSJNWChemController implements Initializable {
                 return;
             }
 
+            String mpiText = mpiField.getText();
+            mpiText = mpiText == null ? null : mpiText.trim();
+
+            int mpiValue = 1;
+            if (mpiText != null && !mpiText.isEmpty()) {
+                try {
+                    mpiValue = Integer.parseInt(mpiText);
+                } catch (NumberFormatException e) {
+                    mpiValue = 1;
+                }
+            }
+
+            int numParallel = Math.max(1, mpiValue);
+
             Thread thread = new Thread(() -> {
                 NWChemRunner nwchemRunner = new NWChemRunner(this.inpFile, OUT_FILE);
                 synchronized (this) {
                     this.nwchemRunner = nwchemRunner;
                 }
 
+                nwchemRunner.setNumParallel(numParallel);
                 nwchemRunner.runNWChem();
 
                 synchronized (this) {

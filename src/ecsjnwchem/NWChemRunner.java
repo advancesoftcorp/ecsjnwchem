@@ -44,7 +44,7 @@ public final class NWChemRunner {
         this.process = null;
     }
 
-    public void setNumParallel(int numParallel) {
+    public synchronized void setNumParallel(int numParallel) {
         this.numParallel = numParallel;
     }
 
@@ -83,7 +83,7 @@ public final class NWChemRunner {
 
         try {
             ProcessBuilder builder = null;
-            if (this.numParallel > 1) {
+            if (this.numParallel > 1 && !this.isWindows()) {
                 builder = new ProcessBuilder(mpiPath, "-n", Integer.toString(this.numParallel), execPath, inpName);
             } else {
                 builder = new ProcessBuilder(execPath, inpName);
@@ -106,6 +106,12 @@ public final class NWChemRunner {
                     }
 
                     envMap.put("PATH", orgPath);
+                }
+
+                if (this.isWindows()) {
+                    envMap.put("OMP_NUM_THREADS", Integer.toString(Math.max(1, this.numParallel)));
+                } else {
+                    envMap.put("OMP_NUM_THREADS", "1");
                 }
 
                 String basisLib = envMap.get("NWCHEM_BASIS_LIBRARY");
