@@ -1155,7 +1155,7 @@ public final class ECSJNWChemController implements Initializable {
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
             line = line == null ? null : line.trim();
-            if (line != null && "geometry".startsWith(line.toLowerCase())) {
+            if (line != null && line.toLowerCase().startsWith("geometry")) {
                 index = i + 1;
                 break;
             }
