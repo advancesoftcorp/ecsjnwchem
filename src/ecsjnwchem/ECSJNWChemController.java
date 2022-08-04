@@ -936,7 +936,10 @@ public final class ECSJNWChemController implements Initializable {
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
 
-                    if (line.equals("DFT ENERGY GRADIENTS")) {
+                    if (line.contains("Finite-difference Hessian")) {
+                        break;
+
+                    } else if (line.equals("DFT ENERGY GRADIENTS")) {
                         reader.readLine();
                         reader.readLine();
                         reader.readLine();
