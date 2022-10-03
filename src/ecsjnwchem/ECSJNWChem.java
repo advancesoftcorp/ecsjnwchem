@@ -35,7 +35,7 @@ public class ECSJNWChem extends Application {
 
             setUserAgentStylesheet(STYLESHEET_MODENA);
             Scene scene = new Scene(root);
-            stage.setTitle("電気化学会関東支部／計算化学セミナー[実践編], GUI for NWChem");
+            stage.setTitle("計算化学セミナー[実践編], GUI for NWChem");
             stage.setFullScreen(false);
             stage.setResizable(true);
             stage.setScene(scene);
