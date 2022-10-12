@@ -67,8 +67,8 @@ public final class NWChemRunner {
 
         } else {
             execDir = null;
-            execPath = "nwchem";
-            mpiPath = "mpirun";
+            execPath = "/usr/local/bin/nwchem";
+            mpiPath = "/usr/local/bin/mpirun";
         }
 
         if (execPath == null || execPath.isEmpty()) {
