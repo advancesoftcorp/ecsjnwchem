@@ -85,8 +85,14 @@ public final class NWChemRunner {
         try {
             ProcessBuilder builder = null;
             if (this.numParallel > 1) {
-                builder = new ProcessBuilder(
-                        mpiPath, "-localonly", "-n", Integer.toString(this.numParallel), execPath, inpName);
+                if (this.isWindows()) {
+                    builder = new ProcessBuilder(
+                            mpiPath, "-localonly", "-n", Integer.toString(this.numParallel), execPath, inpName);
+                } else {
+                    builder = new ProcessBuilder(
+                            mpiPath, "-n", Integer.toString(this.numParallel), execPath, inpName);
+                }
+
             } else {
                 builder = new ProcessBuilder(execPath, inpName);
             }

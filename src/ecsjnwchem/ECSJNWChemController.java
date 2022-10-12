@@ -322,19 +322,19 @@ public final class ECSJNWChemController implements Initializable {
             return;
         }
 
-        this.inpArea.setPromptText(
-                System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + "            Drag & Drop Input File of NWChem.");
+        this.inpArea.setPromptText(" "
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + "            Drag & Drop Input File of NWChem.");
 
         this.inpArea.setOnKeyPressed(event -> {
             if (event == null) {
@@ -470,21 +470,21 @@ public final class ECSJNWChemController implements Initializable {
             return;
         }
 
-        this.outArea.setPromptText(
-                System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + "              Please Reload Output File of NWChem.");
+        this.outArea.setPromptText(" "
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + "              Please Reload Output File of NWChem.");
 
         this.outArea.setOnKeyPressed(event -> {
             if (event != null && event.getCode() == KeyCode.F5) {
@@ -852,21 +852,21 @@ public final class ECSJNWChemController implements Initializable {
             return;
         }
 
-        this.geomArea.setPromptText(
-                System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + System.lineSeparator()
-                        + "              Please Reload Output File of NWChem.");
+        this.geomArea.setPromptText(" "
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + "              Please Reload Output File of NWChem.");
 
         this.geomArea.setOnKeyPressed(event -> {
             if (event != null && event.getCode() == KeyCode.F5) {
